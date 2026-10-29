@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AgentTrace — Apple Pro Forensic Observatory</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            appleBg: '#000000',
+            appleCard: 'rgba(20, 20, 24, 0.72)',
+            appleCardHover: 'rgba(28, 28, 34, 0.85)',
+            appleBorder: 'rgba(255, 255, 255, 0.08)',
+            appleBorderActive: 'rgba(255, 255, 255, 0.18)',
+            appleBlue: '#0A84FF',
+            appleGreen: '#30D158',
+            appleAmber: '#FF9F0A',
+            appleRed: '#FF453A',
+            applePurple: '#BF5AF2',
+          },
+          fontFamily: {
+            sans: ['-apple-system', 'BlinkMacSystemFont', 'SF Pro Display', 'SF Pro Text', 'Inter', 'system-ui', 'sans-serif'],
+            mono: ['SF Mono', 'JetBrains Mono', 'Fira Code', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      color-scheme: dark;
+    }
+    body {
+      background-color: #000000;
+      color: #F5F5F7;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Inter", sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      overflow-x: hidden;
+    }
+    /* Cupertino Frosted Glass */
+    .apple-glass {
+      background: rgba(20, 20, 24, 0.68);
+      backdrop-filter: blur(28px) saturate(190%);
+      -webkit-backdrop-filter: blur(28px) saturate(190%);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 4px 24px -1px rgba(0, 0, 0, 0.5);
+    }
+    .apple-glass-card {
+      background: rgba(24, 24, 28, 0.65);
+      backdrop-filter: blur(24px) saturate(180%);
+      -webkit-backdrop-filter: blur(24px) saturate(180%);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .apple-glass-card:hover {
+      border-color: rgba(255, 255, 255, 0.16);
+      transform: translateY(-1px);
+      box-shadow: 0 12px 32px -8px rgba(0, 0, 0, 0.7);
+    }
+    /* Apple Segmented Control */
+    .segmented-control {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 9999px;
+      padding: 3px;
+    }
+    .segmented-item {
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      border-radius: 9999px;
+    }
+    .segmented-item.active {
+      background: rgba(255, 255, 255, 0.14);
+      color: #FFFFFF;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4), inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+    }
+    /* Subtle Glowing Indicators */
+    .indicator-pill {
+      font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    }
+    /* Native scrollbar styling */
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.12); border-radius: 999px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.25); }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col selection:bg-blue-500 selection:text-white">
+
+  <!-- Ambient Cupertino Radial Mesh -->
+  <div class="fixed inset-0 pointer-events-none -z-10 overflow-hidden">
+    <div class="absolute -top-[25%] -left-[10%] w-[60vw] h-[60vw] rounded-full bg-blue-600/10 blur-[140px]"></div>
+    <div class="absolute top-[20%] -right-[15%] w-[50vw] h-[50vw] rounded-full bg-purple-600/8 blur-[160px]"></div>
+  </div>
+
+  <!-- Apple Navigation Bar -->
+  <header class="border-b border-white/[0.06] bg-black/75 backdrop-blur-2xl sticky top-0 z-50 px-6 py-3.5 flex items-center justify-between">
+    <div class="flex items-center space-x-3.5">
+      <!-- Apple Inspired Icon Glyph -->
+      <div class="w-8 h-8 rounded-lg bg-gradient-to-b from-white/20 to-white/5 border border-white/10 flex items-center justify-center shadow-inner">
+        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+        </svg>
+      </div>
+      <div>
+        <div class="flex items-center space-x-2">
+          <span class="font-semibold text-[15px] tracking-tight text-white">AgentTrace</span>
+          <span class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-white/[0.08] text-zinc-300 border border-white/[0.08] font-medium">Pro v0.2.0</span>
+          <span class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-medium">Red-Team Hardened</span>
+        </div>
+        <p class="text-[11px] text-zinc-400 tracking-tight">Forensic Agent Observatory & Action-Hallucination Interceptor</p>
+      </div>
+    </div>
+
+    <!-- Center: Apple Segmented Scenario Switcher -->
+    <div class="hidden md:flex items-center segmented-control" id="scenarioSegmented">
+      <button data-scenario="hallucination" class="segmented-item active px-3.5 py-1 text-xs font-medium text-zinc-300 hover:text-white">
+        Ghost Actions
+      </button>
+      <button data-scenario="clean" class="segmented-item px-3.5 py-1 text-xs font-medium text-zinc-400 hover:text-white">
+        Grounded (5.0)
+      </button>
+      <button data-scenario="masked" class="segmented-item px-3.5 py-1 text-xs font-medium text-zinc-400 hover:text-white">
+        Masked Failure
+      </button>
+      <button data-scenario="circular" class="segmented-item px-3.5 py-1 text-xs font-medium text-zinc-400 hover:text-white">
+        Retry Trap
+      </button>
+    </div>
+
+    <!-- Right Controls: Audio Haptic Toggle & Upload -->
+    <div class="flex items-center space-x-2.5">
+      <!-- File Drop / Upload Button -->
+      <label class="cursor-pointer text-xs bg-white/[0.08] hover:bg-white/[0.14] text-zinc-200 border border-white/[0.1] px-3 py-1.5 rounded-full transition flex items-center space-x-1.5 font-medium">
+        <svg class="w-3.5 h-3.5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+        <span>Upload Trace</span>
+        <input type="file" id="traceFileInput" accept=".jsonl,.json" class="hidden" />
+      </label>
+
+      <!-- Copy Forensic Report -->
+      <button id="btnCopyReport" title="Copy Forensic Audit Report" class="text-xs bg-white/[0.08] hover:bg-white/[0.14] text-zinc-200 border border-white/[0.1] px-2.5 py-1.5 rounded-full transition font-mono flex items-center space-x-1">
+        <svg class="w-3.5 h-3.5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+        <span id="btnCopyText">Copy</span>
+      </button>
+
+      <!-- Subtle Haptics Toggle -->
+      <button id="btnSoundToggle" title="Audio-Haptic Feedback" class="text-zinc-400 hover:text-white p-1.5 rounded-full bg-white/[0.04] border border-white/[0.06] transition">
+        <svg id="iconSoundOn" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="flex-1 max-w-[1360px] w-full mx-auto px-6 py-6 space-y-6">
+
+    <!-- Top Bento Metrics Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+      
+      <!-- Card 1: SQS Gauge -->
+      <div id="cardSqs" class="apple-glass-card rounded-2xl p-5 flex flex-col justify-between relative overflow-hidden">
+        <div class="flex items-center justify-between">
+          <span class="text-[11px] font-semibold tracking-wider uppercase text-zinc-400 font-mono">Standard Quality Score</span>
+          <span id="badgeStatus" class="indicator-pill text-[11px] font-mono px-2.5 py-0.5 rounded-full font-bold">REJECTED</span>
+        </div>
+        <div class="my-3.5 flex items-baseline space-x-2">
+          <span id="sqsVal" class="text-4xl font-bold tracking-tight font-sans">0.0</span>
+          <span class="text-xs text-zinc-500 font-mono">/ 5.0</span>
+        </div>
+        <div class="w-full bg-white/[0.06] rounded-full h-1 overflow-hidden">
+          <div id="sqsProgress" class="h-full bg-rose-500 transition-all duration-500" style="width: 10%"></div>
+        </div>
+        <p id="sqsSubtext" class="text-[11px] text-zinc-400 mt-2 font-mono">2 Critical Hallucinations Detected</p>
+      </div>
+
+      <!-- Card 2: Multi-turn Steps -->
+      <div class="apple-glass-card rounded-2xl p-5 flex flex-col justify-between">
+        <div class="flex items-center justify-between">
+          <span class="text-[11px] font-semibold tracking-wider uppercase text-zinc-400 font-mono">Trajectory Turns</span>
+          <span class="text-[10px] text-zinc-500 font-mono" id="statModel">gpt-4o</span>
+        </div>
+        <div class="my-2">
+          <div class="text-3xl font-bold tracking-tight font-sans text-white" id="statSteps">2</div>
+          <p class="text-[11px] text-zinc-400 mt-0.5">Sequential interaction steps</p>
+        </div>
+        <div class="text-[11px] text-zinc-400 font-mono flex items-center justify-between border-t border-white/[0.06] pt-2">
+          <span>Security Protocol:</span>
+          <span class="text-emerald-400">Jail Bounds Active</span>
+        </div>
+      </div>
+
+      <!-- Card 3: Tool Execution Grounding -->
+      <div class="apple-glass-card rounded-2xl p-5 flex flex-col justify-between">
+        <div class="flex items-center justify-between">
+          <span class="text-[11px] font-semibold tracking-wider uppercase text-zinc-400 font-mono">Tool Telemetry</span>
+          <span class="text-[10px] text-zinc-500 font-mono">O(1) Ingest</span>
+        </div>
+        <div class="my-2 flex items-baseline space-x-3">
+          <div class="text-3xl font-bold tracking-tight font-sans text-blue-400" id="statTools">1</div>
+          <span class="text-xs text-zinc-500">invoked</span>
+          <div class="text-xl font-bold tracking-tight font-sans text-rose-400" id="statFailedTools">0</div>
+          <span class="text-xs text-zinc-500">errors</span>
+        </div>
+        <div class="text-[11px] text-zinc-400 font-mono flex items-center justify-between border-t border-white/[0.06] pt-2">
+          <span>Grounding Ratio:</span>
+          <span id="statGrounding" class="text-rose-400 font-bold">33% (Ghost actions)</span>
+        </div>
+      </div>
+
+      <!-- Card 4: SHA-256 State Verifier -->
+      <div class="apple-glass-card rounded-2xl p-5 flex flex-col justify-between">
+        <div class="flex items-center justify-between">
+          <span class="text-[11px] font-semibold tracking-wider uppercase text-zinc-400 font-mono">Cryptographic State</span>
+          <span class="text-[10px] text-zinc-500 font-mono">Terminal-Bench</span>
+        </div>
+        <div class="my-2 flex items-center space-x-2">
+          <div id="dotSandbox" class="w-2.5 h-2.5 rounded-full bg-rose-500 animate-pulse"></div>
+          <span id="textSandbox" class="text-xs font-semibold text-rose-400 font-mono">SHA-256 Hash Delta: 0</span>
+        </div>
+        <div class="text-[11px] text-zinc-400 font-mono flex items-center justify-between border-t border-white/[0.06] pt-2">
+          <span>Sandbox Boundary:</span>
+          <span class="text-blue-400">Ephemeral Non-Root</span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Task Prompt Banner -->
+    <div class="apple-glass rounded-xl px-4 py-3 flex items-center justify-between space-x-3 border-l-2 border-blue-500">
+      <div class="flex items-center space-x-3 flex-1 overflow-hidden">
+        <div class="text-blue-400 flex-shrink-0">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        </div>
+        <div class="truncate">
+          <span class="text-[10px] font-mono uppercase text-blue-400 font-bold mr-2">TASK:</span>
+          <span id="taskPrompt" class="text-xs text-zinc-200 font-medium">Sanitize credentials from settings.py and dispatch warning email</span>
+        </div>
+      </div>
+      <div class="text-right flex-shrink-0">
+        <span class="text-[11px] text-zinc-500 font-mono" id="traceId">tr_prod_hallucinate_002</span>
+      </div>
+    </div>
+
+    <!-- Main Workspace Split Screen -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+
+      <!-- Left Column: Trajectory Execution Timeline (7 Cols) -->
+      <section class="lg:col-span-7 space-y-4">
+        <div class="flex items-center justify-between">
+          <h2 class="text-xs font-semibold uppercase tracking-wider text-zinc-400 flex items-center space-x-2 font-mono">
+            <span>Execution Trajectory</span>
+            <span class="text-[10px] bg-white/[0.06] text-zinc-400 border border-white/[0.06] px-2 py-0.5 rounded-full" id="stepCounterBadge">2 Steps</span>
+          </h2>
+          <!-- Filter Buttons -->
+          <div class="flex items-center space-x-1.5 text-[11px] font-mono text-zinc-400">
+            <button id="filterAll" class="px-2 py-0.5 rounded bg-white/[0.1] text-white">All</button>
+            <button id="filterTools" class="px-2 py-0.5 rounded hover:bg-white/[0.06] text-zinc-400 hover:text-white">Tools Only</button>
+          </div>
+        </div>
+
+        <!-- Steps Timeline Container -->
+        <div id="timelineContainer" class="space-y-3.5">
+          <!-- Populated safely by JavaScript (No XSS) -->
+        </div>
+      </section>
+
+      <!-- Right Column: Forensic Interceptor & Hallucination Diagnostics (5 Cols) -->
+      <section class="lg:col-span-5 space-y-4 sticky top-20">
+        <div class="flex items-center justify-between">
+          <h2 class="text-xs font-semibold uppercase tracking-wider text-rose-400 flex items-center space-x-2 font-mono">
+            <span>Forensic Interceptor</span>
+            <span id="badgeFlagCount" class="text-[10px] bg-rose-950/60 text-rose-400 border border-rose-800/80 px-2 py-0.5 rounded-full font-bold">2 Flags</span>
+          </h2>
+          <span class="text-[10px] text-zinc-500 font-mono">Handshake R1 Benchmark</span>
+        </div>
+
+        <!-- Hallucination Cards Container -->
+        <div id="hallucinationContainer" class="space-y-3.5">
+          <!-- Populated safely by JavaScript -->
+        </div>
+
+        <!-- Cupertino Rubric Card -->
+        <div class="apple-glass-card rounded-2xl p-4 space-y-2.5">
+          <div class="flex items-center justify-between">
+            <h3 class="text-[11px] font-bold text-zinc-300 uppercase tracking-wider font-mono">Calibration Rubric</h3>
+            <span class="text-[10px] text-zinc-500 font-mono">Strict ISO</span>
+          </div>
+          <ul class="text-[11px] text-zinc-400 space-y-1.5 font-mono">
+            <li class="flex items-center justify-between pb-1 border-b border-white/[0.04]">
+              <span class="text-emerald-400 font-bold">5.0 SQS</span>
+              <span class="text-[10px] text-zinc-400">100% Grounded, SHA-256 match</span>
+            </li>
+            <li class="flex items-center justify-between pb-1 border-b border-white/[0.04]">
+              <span class="text-amber-400 font-bold">3.0 - 4.0 SQS</span>
+              <span class="text-[10px] text-zinc-400">Retry loop or unhandled error</span>
+            </li>
+            <li class="flex items-center justify-between">
+              <span class="text-rose-400 font-bold">&lt; 2.5 SQS</span>
+              <span class="text-[10px] text-zinc-400">Action Hallucination (Auto-Reject)</span>
+            </li>
+          </ul>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <footer class="border-t border-white/[0.06] py-4 text-center text-xs text-zinc-500 font-mono">
+    AgentTrace Open Source Project • Authored by Krish Joshi • 
+    <a href="https://github.com/krish9-gif/agenttrace" target="_blank" class="text-zinc-400 hover:text-white underline">GitHub Repo</a>
+  </footer>
+
+  <!-- Core Apple Pro App Logic (Hardened, Zero-XSS, Audio Synthesizer) -->
+  <script src="app.js"></script>
+</body>
+</html>

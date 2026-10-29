@@ -1,0 +1,10 @@
+{"timestamp": 100.0, "node_id": "us-east-1", "action": "MUTATE", "tx_id": "tx_alpha", "key": "session_timeout", "value": 3600}
+{"timestamp": 102.5, "node_id": "us-west-2", "action": "MUTATE", "tx_id": "tx_beta", "key": "max_connections", "value": 500}
+{"timestamp": 105.0, "node_id": "eu-central-1", "action": "MUTATE", "tx_id": "tx_gamma", "key": "feature_flag_v2", "value": "enabled"}
+{"timestamp": 106.0, "node_id": "us-east-1", "action": "COMMIT", "tx_id": "tx_alpha", "key": "", "value": null}
+{"timestamp": 108.0, "node_id": "us-west-2", "action": "ROLLBACK", "tx_id": "tx_beta", "key": "", "value": null}
+{"timestamp": 110.0, "node_id": "eu-west-1", "action": "MUTATE", "tx_id": "tx_delta", "key": "session_timeout", "value": 7200}
+{"timestamp": 112.0, "node_id": "eu-west-1", "action": "COMMIT", "tx_id": "tx_delta", "key": "", "value": null}
+{"timestamp": 114.0, "node_id": "eu-central-1", "action": "COMMIT", "tx_id": "tx_gamma", "key": "", "value": null}
+{"timestamp": 116.0, "node_id": "ap-south-1", "action": "MUTATE", "tx_id": "tx_epsilon", "key": "rate_limit_rpm", "value": 1000}
+{"timestamp": 118.0, "node_id": "ap-south-1", "action": "COMMIT", "tx_id": "tx_epsilon", "key": "", "value": null}
